@@ -186,7 +186,7 @@ export default function Home() {
                   {/* SVG logo overlay */}
                   <div className="absolute inset-0 flex items-center justify-center">
                     <Image
-                      src="/m-beige.svg"
+                      src="/M-beige.svg"
                       alt="Le Chat Logo"
                       width={80}
                       height={80}
