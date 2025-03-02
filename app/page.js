@@ -13,12 +13,12 @@ const useIntersectionObserver = (options = {}) => {
   useEffect(() => {
     const observer = new IntersectionObserver(
       ([entry]) => {
-        // If element becomes visible
+       
         if (entry.isIntersecting) {
           setIsVisible(true);
           setHasBeenVisible(true);
         } else {
-          // Only set invisible if we're above the element (scrolled back up)
+         
           if (entry.boundingClientRect.top > 0) {
             setIsVisible(false);
             setHasBeenVisible(false);
