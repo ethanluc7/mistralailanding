@@ -13,14 +13,13 @@ const useIntersectionObserver = (options = {}) => {
   useEffect(() => {
     const observer = new IntersectionObserver(
       ([entry]) => {
-       
         if (entry.isIntersecting) {
           setIsVisible(true);
           setHasBeenVisible(true);
         } else {
-         
-          if (entry.boundingClientRect.top > 0) {
-            setIsVisible(false);
+          setIsVisible(false);
+
+          if (entry.boundingClientRect.top < 0) {
             setHasBeenVisible(false);
           }
         }
@@ -47,7 +46,40 @@ export default function Home() {
   const [section1Ref, section1Visible] = useIntersectionObserver();
   const [section2Ref, section2Visible] = useIntersectionObserver();
   const [section3Ref, section3Visible] = useIntersectionObserver();
-  const [ctaSectionRef, ctaSectionVisible] = useIntersectionObserver();
+  const [ctaSectionRef, ctaSectionVisible] = useIntersectionObserver({
+    rootMargin: "0px 0px -100% 0px",
+  });
+  const [leChatSectionRef, leChatSectionVisible] = useIntersectionObserver();
+  const [showFloatingChat, setShowFloatingChat] = useState(false);
+  const [hasScrolledPastLeChat, setHasScrolledPastLeChat] = useState(false);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+
+  useEffect(() => {
+    const handleScroll = () => {
+      if (leChatSectionRef.current && ctaSectionRef.current) {
+        const leChatRect = leChatSectionRef.current.getBoundingClientRect();
+        const ctaRect = ctaSectionRef.current.getBoundingClientRect();
+
+        const triggerHeight = leChatRect.height * 0.05;
+        const isPartiallyOutOfView = leChatRect.top < -triggerHeight;
+
+        const ctaComingIntoView = ctaRect.top < window.innerHeight + 100;
+
+        if (isPartiallyOutOfView && !ctaComingIntoView) {
+          setShowFloatingChat(true);
+        } else {
+          setShowFloatingChat(false);
+        }
+      }
+    };
+
+    handleScroll();
+
+    window.addEventListener("scroll", handleScroll);
+    return () => {
+      window.removeEventListener("scroll", handleScroll);
+    };
+  }, []);
 
   return (
     <div className="flex min-h-screen flex-col">
@@ -55,8 +87,8 @@ export default function Home() {
       <section className="relative min-h-screen">
         <Image
           alt="Hero background"
-          className="absolute inset-0 size-full bg-gradient-to-bl from-[#9F521A] via-[#D3812F] to-[#B35D20] object-cover backdrop-blur-2xl transition-opacity dark:opacity-75"
-          sizes="(max-width: 768px) 100vw, (max-width: 1200px) 100vw, 100vw"
+          className="absolute inset-0 w-full h-full bg-gradient-to-bl from-[#9F521A] via-[#D3812F] to-[#B35D20] object-cover backdrop-blur-2xl transition-opacity dark:opacity-75"
+          sizes="100vw"
           src="https://cms.mistral.ai/assets/e022b58b-d71f-4a7f-a1a5-ba106052ad36"
           fill
           priority
@@ -69,11 +101,10 @@ export default function Home() {
             <Link href="/" className="flex items-center">
               <Image
                 src="mistrallogo.svg"
-                color="white"
                 alt="Le Chat"
                 width={40}
                 height={40}
-                className="h-10 w-10"
+                className="h-10 w-10 filter invert"
               />
             </Link>
 
@@ -109,34 +140,73 @@ export default function Home() {
               </Link>
             </nav>
 
-            <button className="block md:hidden">
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-                className="h-6 w-6 text-white"
+            <div className="md:hidden">
+              <button 
+                onClick={() => setMobileMenuOpen(!mobileMenuOpen)} 
+                className="block text-white"
               >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M4 6h16M4 12h16M4 18h16"
-                />
-              </svg>
-            </button>
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                  className="h-6 w-6 text-white"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M4 6h16M4 12h16M4 18h16"
+                  />
+                </svg>
+              </button>
+              
+              {mobileMenuOpen && (
+                <div className="absolute top-full left-0 right-0 bg-gradient-to-bl from-[#9F521A] via-[#D3812F] to-[#B35D20] p-4 shadow-lg z-50">
+                  <div className="flex flex-col space-y-4">
+                    <Link href="#" className="text-white hover:text-white/80">
+                      Products
+                    </Link>
+                    <Link href="#" className="text-white hover:text-white/80">
+                      Solutions
+                    </Link>
+                    <Link href="#" className="text-white hover:text-white/80">
+                      Research
+                    </Link>
+                    <Link href="#" className="text-white hover:text-white/80">
+                      Resources
+                    </Link>
+                    <Link href="#" className="text-white hover:text-white/80">
+                      Company
+                    </Link>
+                    <Link
+                      href="#"
+                      className="rounded-md bg-amber-100/20 px-4 py-2 text-white backdrop-blur-sm transition hover:bg-amber-100/30 inline-block"
+                    >
+                      Try the API <ArrowRight className="ml-1 inline h-4 w-4" />
+                    </Link>
+                    <Link
+                      href="#"
+                      className="rounded-md bg-amber-100/20 px-4 py-2 text-white backdrop-blur-sm transition hover:bg-amber-100/30 inline-block"
+                    >
+                      Talk to sales <ArrowRight className="ml-1 inline h-4 w-4" />
+                    </Link>
+                  </div>
+                </div>
+              )}
+            </div>
           </div>
         </header>
 
         <div className="container relative z-10 mx-auto flex min-h-[calc(100vh-80px)] flex-col items-center justify-center px-4 text-center text-white">
-          <h1 className="mb-4 text-5xl leading-tight md:text-7xl">
+          <h1 className="mb-4 text-4xl sm:text-5xl md:text-7xl leading-tight">
             Frontier AI. In Your Hands.
           </h1>
-          <p className="mb-8 text-xl md:text-2xl">
+          <p className="mb-8 text-lg sm:text-xl md:text-2xl">
             Configurable AI for all builders.
           </p>
 
-          <div className="mx-auto mb-8 max-w-xl w-full">
+          <div className="mx-auto mb-8 w-full max-w-xl px-4 sm:px-0">
             <div className="relative">
               <input
                 type="text"
@@ -168,14 +238,14 @@ export default function Home() {
 
       {/* Le Chat Section */}
       <div className="flex justify-center mt-12">
-        <div className="w-[1000px] bg-[#fff4c4]">
-          <div className="relative h-32">
-            {/* Main content row */}
-            <div className="flex items-center px-8 pt-6">
-              {/* Left side with logo and text */}
-              <div className="flex items-center gap-4 max-w-[800px]">
-                <div className="mr-4 h-24 w-24 relative">
-                  {/* Color stripes */}
+        <div 
+          ref={leChatSectionRef} 
+          className="w-full max-w-[1000px] bg-[#fff4c4]"
+        >
+          <div className="relative h-auto py-2 md:h-32 md:py-0">
+            <div className="flex flex-col md:flex-row md:items-center px-4 md:px-8 pt-4 md:pt-6">
+              <div className="flex flex-col md:flex-row md:items-center gap-4 max-w-full md:max-w-[800px]">
+                <div className="mx-auto md:mx-0 mb-4 md:mb-0 md:mr-4 h-20 w-20 md:h-24 md:w-24 relative">
                   <div className="absolute inset-0 flex flex-col">
                     <div className=" h-[20%] bg-[#ffd900]"></div>
                     <div className=" h-[20%] bg-[#ffaf01]"></div>
@@ -183,7 +253,6 @@ export default function Home() {
                     <div className=" h-[20%] bg-[#fa5111]"></div>
                     <div className=" h-[20%] bg-[#e10500]"></div>
                   </div>
-                  {/* SVG logo overlay */}
                   <div className="absolute inset-0 flex items-center justify-center">
                     <Image
                       src="/M-beige.svg"
@@ -194,13 +263,12 @@ export default function Home() {
                     />
                   </div>
                 </div>
-                <h2 className="text-xl text-gray-800 mr-8">
+                <h2 className="text-lg md:text-xl text-gray-800 text-center md:text-left md:mr-8">
                   Le Chat: Your AI assistant for life and work.
                 </h2>
               </div>
 
-              {/* App store buttons */}
-              <div className="flex items-center space-x-3">
+              <div className="flex items-center justify-center md:justify-start space-x-3 mt-4 md:mt-0">
                 <Link
                   href="#"
                   className="block transition-opacity hover:opacity-80"
@@ -232,8 +300,7 @@ export default function Home() {
               </div>
             </div>
 
-            {/* Cat GIF positioned at bottom right */}
-            <div className="absolute -bottom-4 right-4">
+            <div className="absolute -bottom-4 right-4 hidden md:block">
               <Image
                 src="/cat.gif"
                 alt="Pixel Cat Animation"
@@ -248,242 +315,127 @@ export default function Home() {
       </div>
 
       {/* Logo Section */}
-      <div className="flex justify-center">
-        <div className="w-[1000px] relative overflow-hidden py-8 border-t border-amber-200/30 bg-amber-50">
-          {/* Fade masks */}
-          <div className="absolute left-0 top-0 bottom-0 w-32 bg-gradient-to-r from-amber-50 to-transparent z-10"></div>
-          <div className="absolute right-0 top-0 bottom-0 w-32 bg-gradient-to-l from-amber-50 to-transparent z-10"></div>
+      <div className="flex justify-center mb-6 md:mt-24">
+        <div className="w-full max-w-[1000px] relative overflow-hidden py-8 border-t border-amber-200/30 bg-amber-50">
+          <div className="absolute left-0 top-0 bottom-0 w-16 md:w-32 bg-gradient-to-r from-amber-50 to-transparent z-10"></div>
+          <div className="absolute right-0 top-0 bottom-0 w-16 md:w-32 bg-gradient-to-l from-amber-50 to-transparent z-10"></div>
 
           <div className="relative overflow-hidden">
             <div className="animate-scroll">
-              {/* First set of logos */}
-              <div className="flex shrink-0 items-center [&>*]:px-6">
+              <div className="flex shrink-0 items-center [&>*]:px-4 md:[&>*]:px-6">
                 <Image
                   src="/axa.webp"
                   alt="AXA"
                   width={120}
                   height={40}
-                  className="object-contain"
+                  className="object-contain h-6 md:h-auto"
                 />
                 <Image
                   src="/belfius.webp"
                   alt="Belfius"
                   width={120}
                   height={40}
-                  className="object-contain"
+                  className="object-contain h-6 md:h-auto"
                 />
                 <Image
                   src="/bnpparibas.webp"
                   alt="BNP Paribas"
                   width={120}
                   height={40}
-                  className="object-contain"
+                  className="object-contain h-6 md:h-auto"
                 />
                 <Image
                   src="/brave.webp"
                   alt="Brave"
                   width={120}
                   height={40}
-                  className="object-contain"
+                  className="object-contain h-6 md:h-auto"
                 />
                 <Image
                   src="/cloudflare.webp"
                   alt="Cloudflare"
                   width={120}
                   height={40}
-                  className="object-contain"
+                  className="object-contain h-6 md:h-auto"
                 />
                 <Image
                   src="/cmacgm.webp"
                   alt="CMA CGM"
                   width={120}
                   height={40}
-                  className="object-contain"
+                  className="object-contain h-6 md:h-auto"
                 />
                 <Image
                   src="/harvey.webp"
                   alt="Harvey"
                   width={120}
                   height={40}
-                  className="object-contain"
+                  className="object-contain h-6 md:h-auto"
                 />
                 <Image
                   src="/huggingface.webp"
                   alt="Hugging Face"
                   width={120}
                   height={40}
-                  className="object-contain"
-                />
-                <Image
-                  src="/ibm.webp"
-                  alt="IBM"
-                  width={120}
-                  height={40}
-                  className="object-contain"
-                />
-                <Image
-                  src="/mars.webp"
-                  alt="Mars"
-                  width={120}
-                  height={40}
-                  className="object-contain"
-                />
-                <Image
-                  src="/mongodb.webp"
-                  alt="MongoDB"
-                  width={120}
-                  height={40}
-                  className="object-contain"
-                />
-                <Image
-                  src="/octoai.webp"
-                  alt="OctoAI"
-                  width={120}
-                  height={40}
-                  className="object-contain"
-                />
-                <Image
-                  src="/orange.webp"
-                  alt="Orange"
-                  width={120}
-                  height={40}
-                  className="object-contain"
-                />
-                <Image
-                  src="/quora.webp"
-                  alt="Quora"
-                  width={120}
-                  height={40}
-                  className="object-contain"
-                />
-                <Image
-                  src="/sap.webp"
-                  alt="SAP"
-                  width={120}
-                  height={40}
-                  className="object-contain"
-                />
-                <Image
-                  src="/snowflake.webp"
-                  alt="Snowflake"
-                  width={120}
-                  height={40}
-                  className="object-contain"
+                  className="object-contain h-6 md:h-auto"
                 />
               </div>
-              {/* Second set of logos (duplicate) */}
-              <div className="flex shrink-0 items-center [&>*]:px-6">
+              <div className="flex shrink-0 items-center [&>*]:px-4 md:[&>*]:px-6">
                 <Image
                   src="/axa.webp"
                   alt="AXA"
                   width={120}
                   height={40}
-                  className="object-contain"
+                  className="object-contain h-6 md:h-auto"
                 />
                 <Image
                   src="/belfius.webp"
                   alt="Belfius"
                   width={120}
                   height={40}
-                  className="object-contain"
+                  className="object-contain h-6 md:h-auto"
                 />
                 <Image
                   src="/bnpparibas.webp"
                   alt="BNP Paribas"
                   width={120}
                   height={40}
-                  className="object-contain"
+                  className="object-contain h-6 md:h-auto"
                 />
                 <Image
                   src="/brave.webp"
                   alt="Brave"
                   width={120}
                   height={40}
-                  className="object-contain"
+                  className="object-contain h-6 md:h-auto"
                 />
                 <Image
                   src="/cloudflare.webp"
                   alt="Cloudflare"
                   width={120}
                   height={40}
-                  className="object-contain"
+                  className="object-contain h-6 md:h-auto"
                 />
                 <Image
                   src="/cmacgm.webp"
                   alt="CMA CGM"
                   width={120}
                   height={40}
-                  className="object-contain"
+                  className="object-contain h-6 md:h-auto"
                 />
                 <Image
                   src="/harvey.webp"
                   alt="Harvey"
                   width={120}
                   height={40}
-                  className="object-contain"
+                  className="object-contain h-6 md:h-auto"
                 />
                 <Image
                   src="/huggingface.webp"
                   alt="Hugging Face"
                   width={120}
                   height={40}
-                  className="object-contain"
-                />
-                <Image
-                  src="/ibm.webp"
-                  alt="IBM"
-                  width={120}
-                  height={40}
-                  className="object-contain"
-                />
-                <Image
-                  src="/mars.webp"
-                  alt="Mars"
-                  width={120}
-                  height={40}
-                  className="object-contain"
-                />
-                <Image
-                  src="/mongodb.webp"
-                  alt="MongoDB"
-                  width={120}
-                  height={40}
-                  className="object-contain"
-                />
-                <Image
-                  src="/octoai.webp"
-                  alt="OctoAI"
-                  width={120}
-                  height={40}
-                  className="object-contain"
-                />
-                <Image
-                  src="/orange.webp"
-                  alt="Orange"
-                  width={120}
-                  height={40}
-                  className="object-contain"
-                />
-                <Image
-                  src="/quora.webp"
-                  alt="Quora"
-                  width={120}
-                  height={40}
-                  className="object-contain"
-                />
-                <Image
-                  src="/sap.webp"
-                  alt="SAP"
-                  width={120}
-                  height={40}
-                  className="object-contain"
-                />
-                <Image
-                  src="/snowflake.webp"
-                  alt="Snowflake"
-                  width={120}
-                  height={40}
-                  className="object-contain"
+                  className="object-contain h-6 md:h-auto"
                 />
               </div>
             </div>
@@ -493,43 +445,37 @@ export default function Home() {
 
       {/* Features Section */}
       <section className="bg-[#fffaea] relative min-h-screen">
-        {/* Decorative squares */}
         <div className="absolute inset-0 overflow-hidden pointer-events-none">
-          {/* Left side squares */}
-          <div className="absolute top-20 left-8 w-16 h-16 bg-[#fff5d1]"></div>
-          <div className="absolute top-0 left-0 w-8 h-[80vh] bg-[#fff5d1]"></div>
-
-          {/* Right side squares - positioned to overlap content */}
-          <div className="absolute top-12 right-0 w-24 h-24 bg-[#fff5d1] z-10"></div>
-          <div className="absolute top-0 right-0 w-8 h-[80vh] bg-[#fff5d1]"></div>
-
-          {/* Bottom vertical bars */}
-          <div className="absolute bottom-0 left-0 w-8 h-[400px] bg-[#fff5d1]"></div>
-          <div className="absolute bottom-0 left-[50%] -translate-x-1/2 w-8 h-[200px] bg-[#fff5d1]"></div>
-          <div className="absolute bottom-0 right-0 w-8 h-[400px] bg-[#fff5d1]"></div>
+          <div className="absolute top-0 left-0 w-16 h-64 bg-[#fff4c4]"></div>
+          <div className="absolute top-0 left-[30%] w-24 h-24 bg-[#fff4c4] md:block hidden"></div>
+          <div className="absolute top-[225px] left-[300px] w-32 h-32 bg-[#fff4c4] lg:block hidden"></div>
+          <div className="absolute top-[450px] left-[100px] w-48 h-48 bg-[#fff4c4] md:block hidden"></div>
+          
         </div>
 
         <div className="container mx-auto px-4">
-          <div className="flex">
-            {/* Fixed left side */}
-            <div className="w-1/2 sticky top-0 h-screen flex flex-col justify-center pr-20">
-              <h2 className="text-6xl leading-tight">
-                Your AI future
-                <br />
-                belongs in
-                <br />
-                your hands.
-              </h2>
+          <div className="flex flex-col md:flex-row">
+            <div className="w-full md:w-1/2 relative">
+              <div className="h-auto md:h-[calc(40vh+1000px)]">
+                <div className="md:sticky md:top-[32px] pt-16 md:pt-32 pb-12 md:pb-0">
+                  <h2 className="text-4xl md:text-6xl leading-[0.9]">
+                    Your AI future
+                    <br />
+                    belongs in
+                    <br />
+                    your hands.
+                  </h2>
+                </div>
+              </div>
             </div>
 
-            {/* Scrollable right side */}
-            <div className="w-1/2 py-32 space-y-32">
+            <div className="w-full md:w-1/2 py-8 md:py-32 space-y-16 md:space-y-32">
               <div>
-                <h3 className="text-4xl  mb-6">
+                <h3 className="text-3xl md:text-4xl mb-6">
                   Customizable, from pre-training to the real world.
                 </h3>
                 <div className="flex gap-4 mb-4">
-                  <div className="text-orange-500 mt-1">
+                  <div className="text-orange-500 mt-1 flex-shrink-0">
                     <ArrowRight className="h-4 w-4" />
                   </div>
                   <p className="text-gray-800">
@@ -540,9 +486,9 @@ export default function Home() {
               </div>
 
               <div>
-                <h3 className="text-4xl  mb-6">Private and portable.</h3>
+                <h3 className="text-3xl md:text-4xl mb-6">Private and portable.</h3>
                 <div className="flex gap-4 mb-4">
-                  <div className="text-orange-500 mt-1">
+                  <div className="text-orange-500 mt-1 flex-shrink-0">
                     <ArrowRight className="h-4 w-4" />
                   </div>
                   <p className="text-gray-800">
@@ -554,9 +500,9 @@ export default function Home() {
               </div>
 
               <div>
-                <h3 className="text-4xl  mb-6">Transparent and trustworthy.</h3>
+                <h3 className="text-3xl md:text-4xl mb-6">Transparent and trustworthy.</h3>
                 <div className="flex gap-4 mb-4">
-                  <div className="text-orange-500 mt-1">
+                  <div className="text-orange-500 mt-1 flex-shrink-0">
                     <ArrowRight className="h-4 w-4" />
                   </div>
                   <p className="text-gray-800">
@@ -568,11 +514,11 @@ export default function Home() {
               </div>
 
               <div>
-                <h3 className="text-4xl  mb-6">
+                <h3 className="text-3xl md:text-4xl mb-6">
                   Deeply engaged solutioning and value delivery.
                 </h3>
                 <div className="flex gap-4 mb-4">
-                  <div className="text-orange-500 mt-1">
+                  <div className="text-orange-500 mt-1 flex-shrink-0">
                     <ArrowRight className="h-4 w-4" />
                   </div>
                   <p className="text-gray-800">
@@ -583,10 +529,10 @@ export default function Home() {
                 </div>
               </div>
 
-              <div>
-                <h3 className="text-4xl  mb-6">Delightful interfaces.</h3>
+              <div className="pb-0">
+                <h3 className="text-3xl md:text-4xl mb-6">Delightful interfaces.</h3>
                 <div className="flex gap-4 mb-4">
-                  <div className="text-orange-500 mt-1">
+                  <div className="text-orange-500 mt-1 flex-shrink-0">
                     <ArrowRight className="h-4 w-4" />
                   </div>
                   <p className="text-gray-800">
@@ -599,19 +545,18 @@ export default function Home() {
           </div>
         </div>
 
-        {/* Talk to Le Chat Section */}
         <div
-          className={`fixed bottom-8 left-1/2 -translate-x-1/2 z-50 transition-opacity duration-500 ${
-            ctaSectionVisible ? "opacity-0 pointer-events-none" : "opacity-100"
+          className={`fixed bottom-8 left-1/2 -translate-x-1/2 z-[100] transition-opacity duration-500 ${
+            showFloatingChat ? "opacity-100" : "opacity-0 pointer-events-none"
           }`}
         >
-          <div className="bg-white rounded-lg shadow-lg px-6 py-4 flex items-center gap-4">
+          <div className="bg-white rounded-lg shadow-xl px-6 py-4 flex items-center gap-4 border border-amber-200 max-w-[95vw] mx-auto">
             <input
               type="text"
               placeholder="Talk to Le Chat"
-              className="bg-transparent text-gray-800 placeholder-gray-500 outline-none min-w-[200px]"
+              className="bg-transparent text-gray-800 placeholder-gray-500 outline-none w-full min-w-0 md:min-w-[500px]"
             />
-            <button className="bg-orange-500 p-2 rounded-md">
+            <button className="bg-orange-500 p-2 rounded-md flex-shrink-0">
               <ArrowRight className="h-4 w-4 text-white" />
             </button>
           </div>
@@ -619,35 +564,33 @@ export default function Home() {
       </section>
 
       {/* One Platform Section */}
-      <section className="bg-amber-50/80 py-16 border-t border-amber-100">
+      <section className="bg-amber-50/80 py-8 md:py-16 border-t border-amber-100">
         <div className="relative overflow-hidden">
           <div className="relative w-full overflow-hidden">
             <div className="animate-scroll">
-              {/* First set of text */}
-              <div className="flex shrink-0 items-center [&>*]:px-12">
+              <div className="flex shrink-0 items-center [&>*]:px-6 md:[&>*]:px-12">
                 <Image
                   src="/mistrallogo.svg"
                   alt="Mistral AI"
                   width={56}
                   height={40}
-                  className="h-12 w-auto"
+                  className="h-8 md:h-12 w-auto"
                   priority
                 />
-                <h2 className="text-6xl  text-gray-800">
+                <h2 className="text-3xl md:text-6xl text-gray-800">
                   One platform. Many uses. For all humans.
                 </h2>
               </div>
-              {/* Second set of text (duplicate for seamless loop) */}
-              <div className="flex shrink-0 items-center [&>*]:px-12">
+              <div className="flex shrink-0 items-center [&>*]:px-6 md:[&>*]:px-12">
                 <Image
                   src="/mistrallogo.svg"
                   alt="Mistral AI"
                   width={56}
                   height={40}
-                  className="h-12 w-auto"
+                  className="h-8 md:h-12 w-auto"
                   priority
                 />
-                <h2 className="text-6xl  text-gray-800">
+                <h2 className="text-3xl md:text-6xl text-gray-800">
                   One platform. Many uses. For all humans.
                 </h2>
               </div>
@@ -666,7 +609,7 @@ export default function Home() {
           }}
         ></div>
         <div className="flex justify-center relative z-10">
-          <div className="w-[1000px] relative py-32">
+          <div className="w-full max-w-[1000px] relative py-16 md:py-32">
             <div
               ref={section1Ref}
               className={`px-4 relative transition-all duration-1000 ${
@@ -676,16 +619,15 @@ export default function Home() {
               }`}
             >
               <div className="grid gap-8 md:grid-cols-2 items-center">
-                <div className="max-w-[400px]">
-                  <h2 className="text-5xl  mb-6">Get work done.</h2>
-                  <p className="text-xl mb-8 max-w-[250px]">
+                <div className="max-w-full md:max-w-[400px]">
+                  <h2 className="text-3xl md:text-5xl mb-6">Get work done.</h2>
+                  <p className="text-lg md:text-xl mb-8 max-w-full md:max-w-[250px]">
                     Your personalized multilingual AI assistant, with web
                     search, uploads, and data connectors.
                   </p>
                   <Link
                     href="#"
-                    className="inline-flex items-center bg-gray-900 text-white px-6 py-3 mt-7
-                    "
+                    className="inline-flex items-center bg-gray-900 text-white px-6 py-3 mt-7"
                   >
                     Discover le Chat{" "}
                     <ArrowRight className="ml-2 h-4 w-4 text-orange-500" />
@@ -716,7 +658,7 @@ export default function Home() {
           }}
         ></div>
         <div className="flex justify-center relative z-10">
-          <div className="w-[1000px] relative py-32">
+          <div className="w-full max-w-[1000px] relative py-16 md:py-32">
             <div
               ref={section2Ref}
               className={`px-4 relative transition-all duration-1000 ${
@@ -726,9 +668,9 @@ export default function Home() {
               }`}
             >
               <div className="grid gap-8 md:grid-cols-2 items-center">
-                <div>
-                  <h2 className="text-5xl  mb-6">Code faster.</h2>
-                  <p className="text-xl mb-8 max-w-[250px]">
+                <div className="order-2 md:order-1">
+                  <h2 className="text-3xl md:text-5xl mb-6">Code faster.</h2>
+                  <p className="text-lg md:text-xl mb-8 max-w-full md:max-w-[250px]">
                     Build faster with coding assistance across 80+ languages.
                   </p>
                   <Link
@@ -739,7 +681,7 @@ export default function Home() {
                     <ArrowRight className="ml-2 h-4 w-4 text-orange-500" />
                   </Link>
                 </div>
-                <div>
+                <div className="order-1 md:order-2">
                   <Image
                     src="/codefasterimage.png"
                     alt="Code editor interface"
@@ -764,7 +706,7 @@ export default function Home() {
           }}
         ></div>
         <div className="flex justify-center relative z-10">
-          <div className="w-[1000px] relative py-32">
+          <div className="w-full max-w-[1000px] relative py-16 md:py-32">
             <div
               ref={section3Ref}
               className={`px-4 relative transition-all duration-1000 ${
@@ -775,13 +717,13 @@ export default function Home() {
             >
               <div className="grid gap-8 md:grid-cols-2 items-center">
                 <div>
-                  <h2 className="text-5xl  mb-6">Build AI-powered apps.</h2>
-                  <p className="text-xl mb-8 max-w-[250px]">
+                  <h2 className="text-3xl md:text-5xl mb-6">Build AI-powered apps.</h2>
+                  <p className="text-lg md:text-xl mb-8 max-w-full md:max-w-[250px]">
                     Build and deploy custom AI solutions with frontier models.
                   </p>
                   <Link
                     href="#"
-                    className="inline-flex items-center bg-gray-900 text-white px-6 py-3 mt-7 "
+                    className="inline-flex items-center bg-gray-900 text-white px-6 py-3 mt-7"
                   >
                     Discover la Plateforme{" "}
                     <ArrowRight className="ml-2 h-4 w-4 text-orange-500" />
@@ -803,15 +745,15 @@ export default function Home() {
       </div>
 
       {/* Announcements Section */}
-      <section className="bg-[#fff4c4] py-16 mb-16 mt-10">
+      <section className="bg-[#fff4c4] py-12 md:py-16 mb-8 md:mb-16 mt-6 md:mt-10">
         <div className="container mx-auto px-4 max-w-[1000px]">
-          <div className="text-sm text-gray-600 mb-8">Announcements</div>
+          <div className="text-sm text-gray-600 mb-6 md:mb-8">Announcements</div>
           <div>
-            <h2 className="text-4xl  max-w-[600px] leading-tight">
+            <h2 className="text-3xl md:text-4xl max-w-full md:max-w-[600px] leading-tight">
               Announcing the all new le Chat:
-              <br />
+              <br className="hidden md:block" />
               Your AI assistant for life and
-              <br />
+              <br className="hidden md:block" />
               <div className="flex items-center">
                 <span className="inline-flex items-center">
                   work.
@@ -835,20 +777,20 @@ export default function Home() {
       <section className="relative">
         <Image
           alt="Team working in office"
-          className="w-full h-[500px] object-cover brightness-[0.85]"
+          className="w-full h-[300px] md:h-[500px] object-cover brightness-[0.85]"
           src="/futureofai.png"
           width={2000}
           height={500}
           priority
         />
-        <div className="absolute inset-0 flex flex-col justify-end pb-12">
+        <div className="absolute inset-0 flex flex-col justify-end pb-8 md:pb-12">
           <div className="container mx-auto px-4 max-w-[1000px]">
-            <div className="flex items-end justify-between">
-              <div className="max-w-[430px]">
-                <h2 className="text-4xl text-white mb-3 pb-4">
+            <div className="flex flex-col md:flex-row md:items-end md:justify-between">
+              <div className="max-w-full md:max-w-[430px] mb-6 md:mb-0">
+                <h2 className="text-3xl md:text-4xl text-white mb-3 pb-4">
                   Build the future of secure, private AI.
                 </h2>
-                <p className="text-l text-white/90 max-w-[350px]">
+                <p className="text-base md:text-l text-white/90 max-w-full md:max-w-[350px]">
                   Now seeking: Insatiably curious AI enthusiasts with an
                   entrepreneurial spirit.
                 </p>
@@ -868,20 +810,20 @@ export default function Home() {
       </section>
 
       {/* CTA Section */}
-      <section className="bg-amber-50 py-16 text-center" ref={ctaSectionRef}>
+      <section className="bg-amber-50 py-12 md:py-16 text-center" ref={ctaSectionRef}>
         <div className="container mx-auto px-4">
-          <h2 className="text-5xl mb-12">The next chapter of AI is yours.</h2>
-          <div className="flex flex-col md:flex-row justify-center gap-8 mb-16">
+          <h2 className="text-3xl md:text-5xl mb-8 md:mb-12">The next chapter of AI is yours.</h2>
+          <div className="flex flex-col md:flex-row justify-center gap-6 md:gap-8 mb-8 md:mb-16">
             <Link
               href="#"
-              className="flex items-center border-b border-gray-800 pb-1 text-gray-800 hover:border-gray-600"
+              className="flex items-center justify-center md:justify-start border-b border-gray-800 pb-1 text-gray-800 hover:border-gray-600"
             >
               Start building with Mistral AI{" "}
               <ArrowRight className="ml-2 h-4 w-4 text-orange-500" />
             </Link>
             <Link
               href="#"
-              className="flex items-center border-b border-gray-800 pb-1 text-gray-800 hover:border-gray-600"
+              className="flex items-center justify-center md:justify-start border-b border-gray-800 pb-1 text-gray-800 hover:border-gray-600 mt-4 md:mt-0"
             >
               Talk to an expert{" "}
               <ArrowRight className="ml-2 h-4 w-4 text-orange-500" />
@@ -891,7 +833,7 @@ export default function Home() {
       </section>
 
       {/* Color Stripes */}
-      <div className="h-64 grid grid-rows-6 relative">
+      <div className="h-32 md:h-64 grid grid-rows-6 relative">
         <div className="bg-[#ffefc2]"></div>
         <div className="bg-[#ffd900] relative">
           <Image
@@ -899,7 +841,7 @@ export default function Home() {
             alt="Pixel Cat Animation"
             width={200}
             height={200}
-            className="h-48 w-auto absolute -top-32 left-1/2 -translate-x-1/2 z-10"
+            className="h-24 md:h-48 w-auto absolute -top-16 md:-top-32 left-1/2 -translate-x-1/2 z-10"
             unoptimized
           />
         </div>
@@ -910,7 +852,7 @@ export default function Home() {
       </div>
 
       {/* Footer */}
-      <footer className="bg-[#ffefc2] py-12">
+      <footer className="bg-[#ffefc2] py-8 md:py-12">
         <div className="container mx-auto px-4">
           <div className="grid grid-cols-1 md:grid-cols-5 gap-8 md:gap-16">
             <div className="md:col-span-1">
@@ -931,6 +873,7 @@ export default function Home() {
                     width={120}
                     height={40}
                     className="h-8 w-auto"
+                    style={{ width: '120px', height: 'auto' }}
                   />
                 </Link>
                 <Link href="#" className="block">
@@ -940,6 +883,7 @@ export default function Home() {
                     width={120}
                     height={40}
                     className="h-8 w-auto"
+                    style={{ width: '120px', height: 'auto' }}
                   />
                 </Link>
               </div>
@@ -970,6 +914,25 @@ export default function Home() {
                   </Link>
                 </li>
               </ul>
+              <div className="mt-6">
+                <button className="flex items-center border border-gray-300 rounded px-3 py-1">
+                  EN{" "}
+                  <svg
+                    className="ml-2 h-4 w-4"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                    xmlns="http://www.w3.org/2000/svg"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M19 9l-7 7-7-7"
+                    />
+                  </svg>
+                </button>
+              </div>
             </div>
 
             <div className="md:pl-8">
@@ -1047,26 +1010,7 @@ export default function Home() {
           </div>
 
           <div className="mt-12 flex flex-col md:flex-row justify-between items-center">
-            <div className="mb-4 md:mb-0">
-              <button className="flex items-center border border-gray-300 rounded px-3 py-1">
-                EN{" "}
-                <svg
-                  className="ml-2 h-4 w-4"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                  xmlns="http://www.w3.org/2000/svg"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M19 9l-7 7-7-7"
-                  />
-                </svg>
-              </button>
-            </div>
-            <div className="flex gap-4">
+            <div className="flex gap-4 mb-6 md:mb-0 md:ml-auto">
               <Link href="#" className="text-gray-800 hover:text-gray-600">
                 <svg
                   className="h-5 w-5"
@@ -1088,14 +1032,13 @@ export default function Home() {
                 </svg>
               </Link>
               <Link href="#" className="text-gray-800 hover:text-gray-600">
-                <svg
-                  className="h-5 w-5 flex-shrink-0"
-                  viewBox="0 0 24 24"
-                  fill="currentColor"
-                  xmlns="http://www.w3.org/2000/svg"
-                >
-                  <path d="M20.317 4.369c-2.262-1.011-4.665-1.701-7.042-1.998a0.113 0.113 0 0 0-0.121 0.083c-0.312 1.153-0.608 2.302-0.872 3.455a0.112 0.112 0 0 1-0.055 0.071 0.114 0.114 0 0 1-0.086 0.005c-2.269-0.786-4.45-0.786-6.589 0a0.114 0.114 0 0 1-0.086-0.005 0.112 0.112 0 0 1-0.055-0.071 52.391 52.391 0 0 1-0.872-3.455 0.113 0.113 0 0 0-0.121-0.083c-2.377 0.297-4.78 0.987-7.042 1.998a0.112 0.112 0 0 0-0.065 0.082c-2.033 10.319 3.201 15.086 7.511 16.498a0.113 0.113 0 0 0 0.132-0.053 18.715 18.715 0 0 0 1.55-3.17 0.113 0.113 0 0 0-0.064-0.153 13.604 13.604 0 0 1-1.922-0.88 0.113 0.113 0 0 1-0.037-0.158 0.114 0.114 0 0 1 0.144-0.037c4.033 1.948 8.393 1.948 12.427 0a0.114 0.114 0 0 1 0.144 0.037 0.113 0.113 0 0 1-0.037 0.158c-0.652 0.358-1.291 0.638-1.922 0.88a0.113 0.113 0 0 0-0.064 0.153 18.715 18.715 0 0 0 1.55 3.17 0.113 0.113 0 0 0 0.132 0.053c4.31-1.412 9.544-6.179 7.511-16.498a0.112 0.112 0 0 0-0.065-0.082zM9.599 15.396c-1.157 0-2.103-1.057-2.103-2.36 0-1.304 0.937-2.36 2.103-2.36s2.103 1.057 2.103 2.36c0 1.304-0.937 2.36-2.103 2.36zm4.802 0c-1.157 0-2.103-1.057-2.103-2.36 0-1.304 0.937-2.36 2.103-2.36s2.103 1.057 2.103 2.36c0 1.304-0.937 2.36-2.103 2.36z" />
-                </svg>
+                <Image
+                  src="/discord.svg"
+                  alt="Discord"
+                  width={20}
+                  height={20}
+                  className="h-5 w-5"
+                />
               </Link>
             </div>
           </div>
